@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Garasi Utama</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --border-color: #30363d;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --btn-bg: #238636;
+            --btn-hover: #2ea043;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-main);
+            text-shadow: 0 0 10px rgba(88, 166, 255, 0.3);
+        }
+
+        .header p {
+            color: var(--text-muted);
+            margin-top: 10px;
+        }
+
+        .garage-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .car-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .car-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-blue);
+            box-shadow: 0 8px 20px rgba(88, 166, 255, 0.1);
+        }
+
+        .car-card.selected {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 15px rgba(63, 185, 80, 0.3);
+        }
+
+        .car-card.selected::before {
+            content: 'AKTIF';
+            position: absolute;
+            top: 15px;
+            right: -30px;
+            background: var(--accent-green);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 5px 30px;
+            transform: rotate(45deg);
+        }
+
+        .car-image {
+            width: 100%;
+            height: 140px;
+            background: #21262d;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+        }
+
+        .car-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 0 0 15px 0;
+            text-align: center;
+        }
+
+        .stats-container {
+            margin-bottom: 20px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: var(--text-muted);
+        }
+
+        .stat-bar-bg {
+            width: 100%;
+            height: 8px;
+            background-color: #21262d;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .stat-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease-in-out;
+        }
+
+        .speed-fill { background-color: var(--accent-blue); }
+        .handling-fill { background-color: #f778ba; }
+
+        .btn-select {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            background-color: #21262d;
+            color: var(--text-main);
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-select:hover {
+            background-color: #30363d;
+        }
+
+        .car-card.selected .btn-select {
+            background-color: var(--btn-bg);
+            color: white;
+        }
+
+        .car-card.selected .btn-select:hover {
+            background-color: var(--btn-hover);
+        }
+
+        .status-panel {
+            margin-top: 40px;
+            padding: 15px 30px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--accent-green);
+            font-weight: bold;
+            display: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Sistem Garasi</h1>
+        <p>Pilih kendaraan operasional Anda. Sistem akan menyimpan konfigurasi terakhir.</p>
+    </div>
+
+    <div class="garage-container" id="garageContainer">
+        <!-- Kartu mobil akan di-render melalui JavaScript -->
+    </div>
+
+    <div class="status-panel" id="statusPanel">
+        Kendaraan berhasil disiapkan untuk dikerahkan.
+    </div>
+
+    <script>
+        // Database Kendaraan
+        const carDatabase = [
+            {
+                id: 'car_01',
+                name: 'Phantom V-Spec',
+                icon: '🏎️',
+                speed: 95,
+                handling: 75
+            },
+            {
+                id: 'car_02',
+                name: 'Silentium Cruiser',
+                icon: '🚙',
+                speed: 70,
+                handling: 90
+            },
+            {
+                id: 'car_03',
+                name: 'Nightmare GT',
+                icon: '🚘',
+                speed: 85,
+                handling: 85
+            }
+        ];
+
+        const garageContainer = document.getElementById('garageContainer');
+        const statusPanel = document.getElementById('statusPanel');
+
+        // Fungsi untuk me-render garasi
+        function renderGarage() {
+            garageContainer.innerHTML = '';
+            const savedCarId = localStorage.getItem('selectedCar');
+
+            carDatabase.forEach(car => {
+                const isSelected = car.id === savedCarId;
+                
+                const card = document.createElement('div');
+                card.className = `car-card ${isSelected ? 'selected' : ''}`;
+                card.id = `card-${car.id}`;
+
+                card.innerHTML = `
+                    <div class="car-image">${car.icon}</div>
+                    <h3 class="car-title">${car.name}</h3>
+                    
+                    <div class="stats-container">
+                        <div class="stat-row">
+                            <span>Speed</span>
+                            <span>${car.speed}/100</span>
+                        </div>
+                        <div class="stat-bar-bg">
+                            <div class="stat-bar-fill speed-fill" style="width: ${car.speed}%"></div>
+                        </div>
+
+                        <div class="stat-row">
+                            <span>Handling</span>
+                            <span>${car.handling}/100</span>
+                        </div>
+                        <div class="stat-bar-bg">
+                            <div class="stat-bar-fill handling-fill" style="width: ${car.handling}%"></div>
+                        </div>
+                    </div>
+
+                    <button class="btn-select" onclick="selectCar('${car.id}')">
+                        ${isSelected ? 'Terpilih' : 'Pilih Kendaraan'}
+                    </button>
+                `;
+
+                garageContainer.appendChild(card);
+            });
+        }
+
+// Fungsi untuk menangani pemilihan mobil
+        function selectCar(carId) {
+            // Simpan ke localStorage
+            localStorage.setItem('selectedCar', carId);
+            
+            // Render ulang untuk mengupdate UI
+            renderGarage();
+            
+            // Tampilkan notifikasi status
+            statusPanel.style.display = 'block';
+            
+            // VIGI PROTOCOL: Alihkan ke game setelah 1.5 detik
+            setTimeout(() => {
+                statusPanel.style.display = 'none';
+                window.location.href = 'game.html';
+            }, 1500);
+        }
+
+        // Inisialisasi saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', () => {
+            renderGarage();
+        });
+    </script>
+</body>
+</html>
